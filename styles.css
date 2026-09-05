@@ -1,0 +1,14 @@
+:root { color-scheme: light dark; }
+* { box-sizing: border-box; }
+html, body { margin:0; width:100%; height:100%; overflow:hidden; background:#000; font-family:Inter,system-ui,Segoe UI,Roboto,Arial,sans-serif; }
+#game { width:100vw; height:100vh; display:block; touch-action:none; background:#fff; }
+#rotateHint { position:fixed; left:50%; top:14px; transform:translateX(-50%); padding:8px 12px; border-radius:999px; background:rgba(0,0,0,.65); color:#fff; font-size:12px; letter-spacing:.03em; opacity:0; pointer-events:none; transition:opacity .2s; z-index:10; }
+#touchUI { position:fixed; inset:0; display:none; pointer-events:none; z-index:20; }
+.touch-left,.touch-right { position:absolute; bottom:max(18px,env(safe-area-inset-bottom)); display:flex; gap:10px; }
+.touch-left { left:max(16px,env(safe-area-inset-left)); }
+.touch-right { right:max(16px,env(safe-area-inset-right)); align-items:flex-end; }
+#touchUI button { pointer-events:auto; border:1px solid rgba(255,255,255,.35); background:rgba(0,0,0,.35); color:#fff; min-width:58px; min-height:58px; border-radius:50%; font-weight:800; font-size:11px; backdrop-filter: blur(6px); -webkit-backdrop-filter: blur(6px); box-shadow:0 5px 20px rgba(0,0,0,.2); }
+#touchUI button[data-key="Space"] { width:76px; height:76px; }
+#touchUI button:active { transform:scale(.95); background:rgba(255,255,255,.28); }
+@media (pointer:coarse) { #touchUI { display:block; } }
+@media (pointer:coarse) and (orientation:portrait) { #rotateHint { opacity:1; } }

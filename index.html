@@ -1,0 +1,31 @@
+<!doctype html>
+<html lang="sv">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover,user-scalable=no" />
+  <meta name="theme-color" content="#ffffff" />
+  <meta name="description" content="LINE//SHIFT — a visually evolving browser game by Tommie, Nea & Smirja." />
+  <title>LINE//SHIFT — Tommie, Nea & Smirja</title>
+  <link rel="stylesheet" href="styles.css" />
+</head>
+<body>
+  <canvas id="game" aria-label="LINE//SHIFT spel"></canvas>
+  <div id="rotateHint">Vrid gärna mobilen till liggande läge.</div>
+
+  <div id="touchUI" aria-hidden="true">
+    <div class="touch-left">
+      <button data-key="ArrowLeft" aria-label="Vänster">◀</button>
+      <button data-key="ArrowRight" aria-label="Höger">▶</button>
+    </div>
+
+    <div class="touch-right">
+      <button data-key="KeyF">SHOT</button>
+      <button data-key="KeyQ">HOOK</button>
+      <button data-key="ShiftLeft">DASH</button>
+      <button data-key="Space">JUMP</button>
+    </div>
+  </div>
+
+  <script src="game.js"></script>
+</body>
+</html>
