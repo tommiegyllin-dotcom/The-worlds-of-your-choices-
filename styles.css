@@ -12,3 +12,10 @@ html, body { margin:0; width:100%; height:100%; overflow:hidden; background:#000
 #touchUI button:active { transform:scale(.95); background:rgba(255,255,255,.28); }
 @media (pointer:coarse) { #touchUI { display:block; } }
 @media (pointer:coarse) and (orientation:portrait) { #rotateHint { opacity:1; } }
+
+/* Five action buttons still fit comfortably in landscape; portrait uses a compact grid. */
+@media (pointer:coarse) and (orientation:portrait) {
+  .touch-right { display:grid; grid-template-columns:repeat(3,52px); gap:7px; }
+  #touchUI button { min-width:52px; min-height:52px; }
+  #touchUI button[data-key="Space"] { width:60px; height:60px; }
+}

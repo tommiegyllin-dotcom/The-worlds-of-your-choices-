@@ -1,4 +1,4 @@
-# LINE//SHIFT — Tommie, Nea & Smirja
+# LINE//SHIFT
 
 **A visually evolving browser game where a blank world slowly transforms into something strange, beautiful, dangerous, playful, and alive.**
 
@@ -490,18 +490,6 @@ A place may feel familiar even though the player has never seen it before.
 
 The world should feel like it contains more than what can immediately be understood.
 
-## Tommie, Nea & Smirja
-
-The game is created around **Tommie, Nea and Smirja**.
-
-Their presence can influence the world, story, characters and atmosphere without everything needing to be explained directly.
-
-The game can contain humor, imagination, mystery, connection, strange ideas, beauty, chaos and curiosity.
-
-Parts of the world can feel personal without needing to become a literal biography.
-
-The goal is to create something that feels like its own universe.
-
 ## Readability
 
 Even when LINE//SHIFT becomes visually spectacular, gameplay should remain clear.
@@ -637,12 +625,6 @@ Future development can include:
 
 Because some things are better discovered while playing.
 
-## Created by
+## Current structure
 
-# Tommie • Nea • Smirja ❤️
-
-Three people.
-
-One line.
-
-And a world that refuses to stay the same.
+The opening world is intentionally minimal. Completing it does not end the game: it opens into a second, longer world where the visual language becomes more detailed and spatial. Landscapes gain horizons, layered parallax, vegetation, mist, reflections, ruins, stars, denser animation and new world-state mechanics. Future worlds should continue this principle — each stage becomes richer and more visually convincing while preserving clarity and the gradual reveal.
