@@ -48,18 +48,18 @@ function beep(freq=440,dur=.08,type='sine',gain=.03,slide=0){
 function chord(){ [220,277,330,440].forEach((f,i)=>setTimeout(()=>beep(f,.35,'sine',.018,30),i*55)); }
 
 // ---------- game state ----------
-const SAVE='line-shift-save-v3';
+const SAVE='line-shift-save-v4';
 const WORLD_WIDTH=34000;
-const game={ screen:'title', time:0, world:0, prevWorld:0, realm:false, cameraX:0, shake:0, flash:0, message:'', messageT:0, checkpoint:120, deaths:0, bossDead:false, boss2Dead:false, boss3Dead:false, boss4Dead:false, boss5Dead:false, world2Entered:false, world3Entered:false, world4Entered:false, world5Entered:false, endTimer:0 };
+const game={ screen:'title', time:0, world:0, prevWorld:0, realm:false, cameraX:0, shake:0, flash:0, message:'', messageT:0, checkpoint:120, deaths:0, bossDead:false, boss2Dead:false, boss3Dead:false, boss4Dead:false, boss5Dead:false, world2Entered:false, world3Entered:false, world4Entered:false, world5Entered:false, endTimer:0, threadLatch:false, pulseGate:false, lensSeal:false, coreGate:false, gardenBloom:false, stillT:0, cityPuzzle:0, cityPuzzleDone:false, depthActive:false, depthDone:false, depthProgress:0, depthLane:0, depthJump:0, depthJumpV:0, foldT:0 };
 const abilities={ color:false, double:false, grapple:false, dash:false, phase:false, echo:false, realm:false, glide:false, focus:false, resonance:false };
 
 function save(){
-  try{localStorage.setItem(SAVE,JSON.stringify({checkpoint:game.checkpoint,abilities,bossDead:game.bossDead,boss2Dead:game.boss2Dead,boss3Dead:game.boss3Dead,boss4Dead:game.boss4Dead,boss5Dead:game.boss5Dead,realm:game.realm,world2Entered:game.world2Entered,world3Entered:game.world3Entered,world4Entered:game.world4Entered,world5Entered:game.world5Entered}));}catch{}
+  try{localStorage.setItem(SAVE,JSON.stringify({checkpoint:game.checkpoint,abilities,bossDead:game.bossDead,boss2Dead:game.boss2Dead,boss3Dead:game.boss3Dead,boss4Dead:game.boss4Dead,boss5Dead:game.boss5Dead,realm:game.realm,world2Entered:game.world2Entered,world3Entered:game.world3Entered,world4Entered:game.world4Entered,world5Entered:game.world5Entered,threadLatch:game.threadLatch,pulseGate:game.pulseGate,lensSeal:game.lensSeal,coreGate:game.coreGate,gardenBloom:game.gardenBloom,cityPuzzleDone:game.cityPuzzleDone,depthDone:game.depthDone}));}catch{}
 }
 function load(){
   try{
     const s=JSON.parse(localStorage.getItem(SAVE)||'null');
-    if(s){ game.checkpoint=s.checkpoint||120; Object.assign(abilities,s.abilities||{}); game.bossDead=!!s.bossDead; game.boss2Dead=!!s.boss2Dead; game.boss3Dead=!!s.boss3Dead; game.boss4Dead=!!s.boss4Dead; game.boss5Dead=!!s.boss5Dead; game.realm=!!s.realm; game.world2Entered=!!s.world2Entered; game.world3Entered=!!s.world3Entered; game.world4Entered=!!s.world4Entered; game.world5Entered=!!s.world5Entered; }
+    if(s){ game.checkpoint=s.checkpoint||120; Object.assign(abilities,s.abilities||{}); game.bossDead=!!s.bossDead; game.boss2Dead=!!s.boss2Dead; game.boss3Dead=!!s.boss3Dead; game.boss4Dead=!!s.boss4Dead; game.boss5Dead=!!s.boss5Dead; game.realm=!!s.realm; game.world2Entered=!!s.world2Entered; game.world3Entered=!!s.world3Entered; game.world4Entered=!!s.world4Entered; game.world5Entered=!!s.world5Entered; game.threadLatch=!!s.threadLatch; game.pulseGate=!!s.pulseGate; game.lensSeal=!!s.lensSeal; game.coreGate=!!s.coreGate; game.gardenBloom=!!s.gardenBloom; game.cityPuzzleDone=!!s.cityPuzzleDone; game.depthDone=!!s.depthDone; }
   }catch{}
 }
 load();
@@ -207,15 +207,29 @@ function addEnemy(x,type='walker'){ enemies.push({x,y:groundY-30,w:25,h:28,vx:ty
 [27880,29180,30580,31920,32620].forEach(x=>addEnemy(x,'wisp'));
 [28420,29880,31280,32420].forEach(x=>addEnemy(x,'sentinel'));
 
-const boss={x:7520,y:groundY-55,w:62,h:58,hp:10,maxHp:10,dead:game.bossDead,t:0,vx:0,shot:0};
-const boss2={x:15320,y:groundY-82,w:86,h:82,hp:16,maxHp:16,dead:game.boss2Dead,t:0,shot:0,phase:false};
-const boss3={x:20940,y:groundY-78,w:82,h:78,hp:18,maxHp:18,dead:game.boss3Dead,t:0,shot:0};
-const boss4={x:26620,y:groundY-90,w:92,h:90,hp:22,maxHp:22,dead:game.boss4Dead,t:0,shot:0};
-const boss5={x:33100,y:groundY-105,w:108,h:104,hp:28,maxHp:28,dead:game.boss5Dead,t:0,shot:0,phase:false};
+const boss={x:7520,y:groundY-55,w:62,h:58,hp:7,maxHp:7,dead:game.bossDead,t:0,vx:0,shot:1.8,intro:false};
+const boss2={x:15320,y:groundY-82,w:86,h:82,hp:9,maxHp:9,dead:game.boss2Dead,t:0,shot:2.0,phase:false,intro:false};
+const boss3={x:20940,y:groundY-78,w:82,h:78,hp:10,maxHp:10,dead:game.boss3Dead,t:0,shot:2.1,intro:false};
+const boss4={x:26620,y:groundY-90,w:92,h:90,hp:12,maxHp:12,dead:game.boss4Dead,t:0,shot:2.2,intro:false};
+const boss5={x:33100,y:groundY-105,w:108,h:104,hp:14,maxHp:14,dead:game.boss5Dead,t:0,shot:2.4,phase:false,intro:false};
 const bullets=[];
 const shots=[];
 const echoShard={x:4375,y:280,taken:abilities.echo};
 const echoPortal={x:6330,y:groundY-45,w:34,h:45};
+// Ability gates: powers must solve real route problems.
+const threadLatch={anchorX:3730,gateX:4015};
+const pulseGate={x:5485,y:groundY-125,w:24,h:125};
+const shiftGates=[{x:10060,state:true,label:'LJUS'},{x:12010,state:false,label:'SKUGGA'},{x:13860,state:true,label:'LJUS'}];
+const lensSeal={x:24760,y:groundY-160,w:28,h:160};
+const coreGate={x:30100,y:groundY-180,w:30,h:180};
+const gardenSeed={x:27440,y:groundY-10};
+const cityLamps=[{x:21670,y:400,id:0},{x:21870,y:330,id:1},{x:22070,y:400,id:2}];
+const cityOrder=[1,0,2];
+
+// World 3 folds from side-view into a short perspective run.
+const FOLD_TIME=1.35;
+const depthObstacles=[{z:.13,lane:-.55,type:'rock'},{z:.23,lane:.55,type:'gust'},{z:.34,lane:0,type:'rock'},{z:.46,lane:-.62,type:'lightning'},{z:.58,lane:.62,type:'rock'},{z:.70,lane:0,type:'gustwall'},{z:.82,lane:-.48,type:'lightning'},{z:.90,lane:.48,type:'rock'}];
+
 const windZones=[
   {x:16760,y:185,w:150,h:285,force:1220},{x:18260,y:165,w:170,h:305,force:1260},{x:19820,y:155,w:180,h:315,force:1320},
   {x:28160,y:185,w:150,h:285,force:1120},{x:30600,y:160,w:170,h:310,force:1200}
@@ -225,25 +239,25 @@ const signs=[
   {x:300,text:'Gå. Det räcker som början.'},
   {x:920,text:'Något förändras när du tar det.'},
   {x:2200,text:'Vissa vägar kräver att du minns.'},
-  {x:3220,text:'Q — kasta tråden mot ljuspunkter.'},
-  {x:5160,text:'SHIFT — en kort puls genom världen.'},
+  {x:3220,text:'Q — HOOK. Fånga ljuspunkten. Vissa lås sitter utom räckhåll.'},
+  {x:5160,text:'DASH — slå PULSEN genom sådant som inte går att flytta.'},
   {x:6220,text:'Det som varit osynligt har alltid funnits.'},
   {x:7130,text:'Slutet på en linje kan vara början på en värld.'},
   {x:8080,text:'VÄRLD 2 — HORISONTEN'},
   {x:9070,text:'Nu finns det mer än en väg genom samma plats.'},
-  {x:9520,text:'E — skifta verkligheten.'},
+  {x:9520,text:'E — SHIFT. Vissa vägar finns bara i rätt skikt.'},
   {x:11180,text:'Det som ser ut som bakgrund kan snart bli spelrum.'},
   {x:12920,text:'Världen blir tydligare. Men inte enklare.'},
   {x:14650,text:'Använd allt du har lärt dig.'},
-  {x:16030,text:'VÄRLD 3 — STORMBRANTEN'},
+  {x:16030,text:'VÄRLD 3 — STORMBRANTEN. Framåt slutar snart betyda höger.'},
   {x:16540,text:'Håll JUMP i luften. Låt vinden bära dig.'},
   {x:17980,text:'Nu börjar marken få höjd, väder och tyngd.'},
   {x:20480,text:'Stormen testar rörelse, inte bara strid.'},
-  {x:21470,text:'VÄRLD 4 — DEN LEVANDE STADEN'},
+  {x:21470,text:'VÄRLD 4 — DEN LEVANDE STADEN. Se ljusrytmen. Spela tillbaka den.'},
   {x:22140,text:'LINSEN gör skotten tyngre och tydligare.'},
   {x:23940,text:'Gamla krafter fungerar annorlunda mellan väggarna.'},
   {x:26080,text:'Staden har lärt sig att försvara sig.'},
-  {x:27110,text:'VÄRLD 5 — DEN KOSMISKA TRÄDGÅRDEN'},
+  {x:27110,text:'VÄRLD 5 — DEN KOSMISKA TRÄDGÅRDEN. Allt öppnas inte genom att göra mer.'},
   {x:27640,text:'KÄRNAN låter pulsen slå sönder projektiler.'},
   {x:29620,text:'Här möts alla världar du redan har förstått.'},
   {x:32480,text:'Sista sträckan. Använd allt.'}
@@ -251,6 +265,8 @@ const signs=[
 
 function resetPlayer(full=false){
   player.x=game.checkpoint; player.y=groundY-60; player.vx=player.vy=0; player.hp=player.maxHp; player.grapple=null; player.dashT=0; player.inv=0;
+  game.depthActive=false; game.depthProgress=0; game.depthLane=0; game.depthJump=0; game.depthJumpV=0; game.foldT=0; bullets.length=0; shots.length=0;
+  for(const o of depthObstacles) o.hit=false;
   if(full){ game.checkpoint=120; }
 }
 resetPlayer();
@@ -297,6 +313,33 @@ function damage(srcX){
   if(player.hp<=0){ game.deaths++; resetPlayer(); setMessage('LINJEN BÖRJAR OM HÄR',1.8); }
 }
 
+function depthDamage(){
+  if(player.inv>0) return;
+  player.hp--; player.inv=1.1; game.shake=10; game.flash=.35; beep(88,.16,'sawtooth',.04,-35);
+  if(player.hp<=0){ game.deaths++; resetPlayer(); setMessage('VIKNINGEN BÖRJAR OM',1.8); }
+}
+
+function updateDepthMode(dt,left,right,jump,dash){
+  if(!game.depthActive && !game.depthDone && player.x>=16930 && player.x<17920){
+    game.depthActive=true;game.foldT=0;game.depthProgress=0;game.depthLane=0;game.depthJump=0;game.depthJumpV=0;game.checkpoint=Math.max(game.checkpoint,16880);save();
+    player.hp=player.maxHp;player.inv=1;bullets.length=0;shots.length=0;for(const o of depthObstacles)o.hit=false;
+    setMessage('VÄRLDEN VIKER SIG — NU GÅR LINJEN INÅT',3.4);chord();
+  }
+  if(!game.depthActive) return false;
+  game.foldT+=dt;player.inv=Math.max(0,player.inv-dt);player.dashCD=Math.max(0,player.dashCD-dt);
+  const steer=(right?1:0)-(left?1:0);game.depthLane=clamp(game.depthLane+steer*1.35*dt,-.86,.86);
+  if(jump&&game.depthJump<=.01){game.depthJumpV=2.25;beep(370,.06,'square',.018,90);}
+  game.depthJump+=game.depthJumpV*dt;game.depthJumpV-=4.8*dt*(abilities.glide&&keys.has('Space')&&game.depthJumpV<0?.42:1);if(game.depthJump<0){game.depthJump=0;game.depthJumpV=0;}
+  if(game.foldT>FOLD_TIME){
+    let speed=.046;if(keys.has('ArrowUp')||keys.has('KeyW')||right)speed+=.012;
+    if(dash&&abilities.dash&&player.dashCD<=0){player.dashCD=.7;speed+=.18;game.flash=.18;beep(125,.1,'sawtooth',.02,420);}
+    game.depthProgress+=speed*dt;
+    for(const o of depthObstacles){if(o.hit)continue;const dz=o.z-game.depthProgress;const laneHit=o.type==='gustwall'||Math.abs(game.depthLane-o.lane)<.28;if(dz<.016&&dz>-.016&&laneHit){const clear=o.type==='gustwall'?(abilities.glide&&keys.has('Space')):(game.depthJump>.34||(o.type==='gust'&&abilities.glide&&keys.has('Space')));if(o.type==='gustwall'&&!clear){depthDamage();game.depthProgress=o.z-.022;setMessage('HÅLL JUMP — LÅT VINDEN BÄRA DIG',1.2);continue;}o.hit=true;if(!clear)depthDamage();else beep(690,.04,'triangle',.012,80);}}
+  }
+  if(game.depthProgress>=1){game.depthActive=false;game.depthDone=true;player.x=17940;player.y=groundY-70;player.vx=120;player.vy=-40;game.checkpoint=Math.max(game.checkpoint,17940);save();game.flash=1;chord();setMessage('BAKGRUNDEN BLEV MARK. LINJEN VIKTE SIG IGEN.',4.2);}
+  return true;
+}
+
 function update(dt){
   game.time+=dt; game.flash=Math.max(0,game.flash-dt*1.8); game.shake=Math.max(0,game.shake-dt*18); game.messageT=Math.max(0,game.messageT-dt);
   if(pressed.has('KeyM')) muted=!muted;
@@ -319,6 +362,8 @@ function update(dt){
   const hook=pressed.has('KeyQ');
   const shoot=pressed.has('KeyF');
   const realmShift=pressed.has('KeyE');
+
+  if(updateDepthMode(dt,left,right,jump,dash)){ pressed.clear(); return; }
 
   if(realmShift && abilities.realm){ game.realm=!game.realm; game.flash=.65; game.shake=5; beep(game.realm?680:320,.16,'sine',.025,game.realm?-140:180); setMessage(game.realm?'SKIKT: LJUS':'SKIKT: SKUGGA',1.1); save(); }
 
@@ -349,7 +394,7 @@ function update(dt){
     else{
       let best=null,bd=310;
       for(const a of anchors){ const d=dist(player.x+12,player.y+10,a.x,a.y); if(d<bd){bd=d;best=a;} }
-      if(best){ player.grapple={x:best.x,y:best.y,len:bd*.82}; beep(600,.07,'triangle',.02,-180); }
+      if(best){ player.grapple={x:best.x,y:best.y,len:bd*.82}; beep(600,.07,'triangle',.02,-180); if(best.x===threadLatch.anchorX&&!game.threadLatch){game.threadLatch=true;save();game.flash=.45;setMessage('TRÅDEN DRAR LOSS ETT LÅS',2.2);chord();} }
     }
   }
 
@@ -382,6 +427,21 @@ function update(dt){
   player.x=clamp(player.x,0,WORLD_WIDTH-player.w);
   if(player.y>H()+300 || player.y>720){ game.deaths++; resetPlayer(); }
 
+  // Every major ability has a route problem that cannot be ignored.
+  if(!game.threadLatch && player.x+player.w>threadLatch.gateX && player.x<threadLatch.gateX+18){player.x=threadLatch.gateX-player.w-1;player.vx=Math.min(0,player.vx);if(game.messageT<.25)setMessage('HOOK: FÅNGA LJUSPUNKTEN OVANFÖR',1.7);}
+  if(!game.pulseGate && hit(player,pulseGate)){
+    if(player.dashT>0&&abilities.dash){game.pulseGate=true;save();game.flash=.65;game.shake=9;setMessage('PULSEN KROSSAR VÄGGEN',1.8);beep(95,.14,'sawtooth',.035,420);}
+    else{player.x=pulseGate.x-player.w-1;player.vx=Math.min(0,player.vx);if(game.messageT<.25)setMessage('DASH GENOM VÄGGEN',1.5);}
+  }
+  for(const g of shiftGates){if(game.realm!==g.state&&player.x+player.w>g.x&&player.x<g.x+20){if(player.vx>=0){player.x=g.x-player.w-1;player.vx=Math.min(0,player.vx);}else{player.x=g.x+21;player.vx=Math.max(0,player.vx);}if(game.messageT<.25)setMessage(`SHIFT: VÄGEN FINNS I ${g.label}`,1.5);}}
+  const cityGateX=22255;if(!game.cityPuzzleDone&&player.x+player.w>cityGateX&&player.x<cityGateX+20){player.x=cityGateX-player.w-1;player.vx=Math.min(0,player.vx);if(game.messageT<.25)setMessage('SE LJUSRYTMEN. SKJUT SAMMA ORDNING.',1.8);}
+  if(!game.lensSeal&&player.x+player.w>lensSeal.x&&player.x<lensSeal.x+lensSeal.w){player.x=lensSeal.x-player.w-1;player.vx=Math.min(0,player.vx);if(game.messageT<.25)setMessage('LINS: FOKUSERA ETT SKOTT GENOM GLASET',1.8);}
+  const gardenGateX=27630;if(!game.gardenBloom&&player.x+player.w>gardenGateX&&player.x<gardenGateX+18){player.x=gardenGateX-player.w-1;player.vx=Math.min(0,player.vx);if(game.messageT<.25)setMessage('INGENTING HÄR REAGERAR PÅ KRAFT',1.5);}
+  if(!game.coreGate&&player.x+player.w>coreGate.x&&player.x<coreGate.x+coreGate.w){if(player.dashT>0&&abilities.resonance){game.coreGate=true;save();game.flash=.8;game.shake=12;setMessage('KÄRNAN RESONERAR — RIDÅN SPRICKER',2);chord();}else{player.x=coreGate.x-player.w-1;player.vx=Math.min(0,player.vx);if(game.messageT<.25)setMessage('KÄRNA: FÖRSÖK INTE SKJUTA. GÅ RAKT IGENOM.',1.8);}}
+
+  // World 5 starts with the opposite of action: stand still and let the garden react.
+  if(!game.gardenBloom&&Math.abs(player.x-gardenSeed.x)<115){if(Math.abs(player.vx)<45&&!left&&!right){game.stillT+=dt;}else game.stillT=Math.max(0,game.stillT-dt*.9);if(game.stillT>=1.8){game.gardenBloom=true;save();game.flash=.8;chord();setMessage('NÄR DU STANNADE BÖRJADE VÄRLDEN RÖRA SIG',3.1);}}
+
   for(const s of spikes){ if(hit(player,s)) damage(s.x+s.w/2); }
   for(const p of pickups){ if(!p.taken && dist(player.x+12,player.y+17,p.x,p.y)<34) collect(p); }
   for(const cp of checkpoints){ if(player.x>cp && game.checkpoint<cp){game.checkpoint=cp; save(); setMessage('CHECKPOINT',1.2); beep(760,.06,'sine',.015,80);} }
@@ -399,7 +459,10 @@ function update(dt){
 
   // enemies
   for(const e of enemies){
-    if(e.dead) continue; e.t+=dt;
+    if(e.dead) continue;
+    // The garden's opening is intentionally safe: stillness must be a fair, readable solution.
+    if(!game.gardenBloom && Math.abs(e.home-gardenSeed.x)<620) continue;
+    e.t+=dt;
     if(e.type==='flyer' || e.type==='wisp'){
       e.y=(e.type==='wisp'?270:300)+Math.sin(e.t*(e.type==='wisp'?3.1:2.2))*55;
       e.x=e.home+Math.sin(e.t*(e.type==='wisp'?1.2:.8))*90;
@@ -427,6 +490,27 @@ function update(dt){
   for(const s of shots){
     s.x+=s.vx*dt;
     s.life-=dt;
+
+    // World 4: watch the three lights, then repeat their rhythm with shots.
+    if(!game.cityPuzzleDone && s.x>21580 && s.x<22150){
+      for(const lamp of cityLamps){
+        if(dist(s.x,s.y,lamp.x,lamp.y)<24){
+          s.dead=true;
+          const expected=cityOrder[game.cityPuzzle];
+          if(lamp.id===expected){game.cityPuzzle++;beep(420+lamp.id*110,.09,'triangle',.025,80);game.flash=.16;if(game.cityPuzzle>=cityOrder.length){game.cityPuzzleDone=true;save();chord();setMessage('STADEN KÄNNER IGEN RYTMEN',2.8);}else setMessage(`${game.cityPuzzle} / ${cityOrder.length}`,1);}
+          else{game.cityPuzzle=0;beep(120,.13,'sawtooth',.02,-40);setMessage('SEKVENSEN BÖRJAR OM',1.25);}
+          break;
+        }
+      }
+    }
+    if(s.dead) continue;
+
+    if(!game.lensSeal && s.x>lensSeal.x && s.x<lensSeal.x+lensSeal.w+12 && s.y>lensSeal.y-20 && s.y<lensSeal.y+lensSeal.h+20){
+      s.dead=true;
+      if(abilities.focus){game.lensSeal=true;save();game.flash=.9;game.shake=10;chord();setMessage('LINSEN DELAR GLASET',2.1);}else beep(820,.05,'triangle',.012,-180);
+      continue;
+    }
+
     for(const e of enemies){
       if(e.dead) continue;
       if(hit({x:s.x-4,y:s.y-2,w:8,h:4},e)){
@@ -442,11 +526,12 @@ function update(dt){
     }
   }
 
-  // boss
+  // boss — attacks are telegraphed and learnable. Skill should be enough on a first clean run.
   if(!boss.dead && player.x>7100){
+    if(!boss.intro){boss.intro=true;player.hp=player.maxHp;bullets.length=0;for(const e of enemies)if(Math.abs(e.home-7520)<520)e.dead=true;boss.shot=1.8;game.checkpoint=Math.max(game.checkpoint,7080);setMessage('VAKTEN LYSER INNAN DEN SKJUTER',2.4);}
     boss.t+=dt; boss.y=groundY-boss.h+Math.sin(boss.t*2)*6; boss.x=7520+Math.sin(boss.t*.7)*120;
     boss.shot-=dt;
-    if(boss.shot<=0){boss.shot=1.15; const dx=(player.x-boss.x),dy=(player.y-boss.y),d=Math.hypot(dx,dy)||1; bullets.push({x:boss.x+30,y:boss.y+20,vx:dx/d*250,vy:dy/d*250,r:6}); beep(90,.08,'sawtooth',.012,60);}
+    if(boss.shot<=0){boss.shot=1.48; const dx=(player.x-boss.x),dy=(player.y-boss.y),d=Math.hypot(dx,dy)||1; bullets.push({x:boss.x+30,y:boss.y+20,vx:dx/d*205,vy:dy/d*205,r:6,life:5}); beep(90,.08,'sawtooth',.012,60);}
     for(const s of shots){
       if(!s.dead && hit({x:s.x-4,y:s.y-2,w:8,h:4},boss) && abilities.echo){ boss.hp-=s.damage||1; s.dead=true; game.shake=6; beep(110,.06,'square',.02,140); if(boss.hp<=0){boss.dead=true; game.bossDead=true; save(); chord(); setMessage('LINJEN ÄR DIN NU',4);} }
     }
@@ -466,16 +551,17 @@ function update(dt){
 
   // World 2 boss: a shifting mirror that can only be damaged in the matching world layer.
   if(!boss2.dead && player.x>14700){
-    boss2.t+=dt; boss2.phase=Math.floor(boss2.t/3.2)%2===1;
+    if(!boss2.intro){boss2.intro=true;player.hp=player.maxHp;bullets.length=0;for(const e of enemies)if(Math.abs(e.home-15320)<560)e.dead=true;boss2.shot=2;game.checkpoint=Math.max(game.checkpoint,14620);setMessage('MATCHA VAKTENS SKIKT — SEDAN ANFALL',2.8);}
+    boss2.t+=dt; boss2.phase=Math.floor(boss2.t/4.0)%2===1;
     boss2.y=groundY-boss2.h-12+Math.sin(boss2.t*1.5)*18;
     boss2.x=15310+Math.sin(boss2.t*.55)*115;
     boss2.shot-=dt;
     if(boss2.shot<=0){
-      boss2.shot=.85;
+      boss2.shot=1.38;
       for(let a=-1;a<=1;a++){
         const dx=player.x-boss2.x,dy=player.y-boss2.y,d=Math.hypot(dx,dy)||1;
         const ang=Math.atan2(dy,dx)+a*.16;
-        bullets.push({x:boss2.x+43,y:boss2.y+40,vx:Math.cos(ang)*230,vy:Math.sin(ang)*230,r:5,life:5});
+        bullets.push({x:boss2.x+43,y:boss2.y+40,vx:Math.cos(ang)*205,vy:Math.sin(ang)*205,r:5,life:5});
       }
       beep(105,.08,'sawtooth',.015,90);
     }
@@ -498,8 +584,9 @@ function update(dt){
 
   // World 3 boss — storm heart. Wind and movement matter more than standing still.
   if(!boss3.dead && player.x>20250){
-    boss3.t+=dt; boss3.x=20930+Math.sin(boss3.t*.8)*145; boss3.y=groundY-boss3.h-25+Math.sin(boss3.t*1.9)*35; boss3.shot-=dt;
-    if(boss3.shot<=0){boss3.shot=.72;for(let a=-2;a<=2;a++){const ang=Math.atan2(player.y-boss3.y,player.x-boss3.x)+a*.13;bullets.push({x:boss3.x+41,y:boss3.y+38,vx:Math.cos(ang)*235,vy:Math.sin(ang)*235,r:4.5,life:5});}beep(95,.07,'sawtooth',.014,100);}
+    if(!boss3.intro){boss3.intro=true;player.hp=player.maxHp;bullets.length=0;for(const e of enemies)if(Math.abs(e.home-20940)<560)e.dead=true;boss3.shot=2.1;game.checkpoint=Math.max(game.checkpoint,20120);setMessage('STORMHJÄRTAT VISAR VAR SLAGET KOMMER',2.7);}
+    boss3.t+=dt; boss3.x=20930+Math.sin(boss3.t*.72)*130; boss3.y=groundY-boss3.h-25+Math.sin(boss3.t*1.65)*30; boss3.shot-=dt;
+    if(boss3.shot<=0){boss3.shot=1.34;for(let a=-1;a<=1;a++){const ang=Math.atan2(player.y-boss3.y,player.x-boss3.x)+a*.17;bullets.push({x:boss3.x+41,y:boss3.y+38,vx:Math.cos(ang)*210,vy:Math.sin(ang)*210,r:4.8,life:5});}beep(95,.07,'sawtooth',.014,100);}
     for(const sh of shots){if(!sh.dead&&hit({x:sh.x-(sh.size||5),y:sh.y-3,w:(sh.size||5)*2,h:6},boss3)){boss3.hp-=sh.damage||1;sh.dead=true;game.shake=6;beep(130,.05,'square',.02,140);if(boss3.hp<=0){boss3.dead=true;game.boss3Dead=true;save();chord();setMessage('STORMEN ÖPPNAR SIG',4);}}}
     if(hit(player,boss3)){if(player.dashT>0){boss3.hp--;player.vx*=-.45;game.shake=9;if(boss3.hp<=0){boss3.dead=true;game.boss3Dead=true;save();chord();}}else damage(boss3.x);}
   }
@@ -508,19 +595,21 @@ function update(dt){
 
   // World 4 boss — city core. Alternates shield layers and rewards realm shifting.
   if(!boss4.dead && player.x>25800){
-    boss4.t+=dt;const phase=Math.floor(boss4.t/2.6)%2===1;boss4.x=26610+Math.sin(boss4.t*.65)*120;boss4.y=groundY-boss4.h-16+Math.sin(boss4.t*1.4)*16;boss4.shot-=dt;
-    if(boss4.shot<=0){boss4.shot=.64;for(let a=-1;a<=1;a++){const ang=Math.atan2(player.y-boss4.y,player.x-boss4.x)+a*.21;bullets.push({x:boss4.x+46,y:boss4.y+42,vx:Math.cos(ang)*270,vy:Math.sin(ang)*270,r:5.5,life:5});}beep(120,.06,'square',.012,80);}
+    if(!boss4.intro){boss4.intro=true;player.hp=player.maxHp;bullets.length=0;for(const e of enemies)if(Math.abs(e.home-26620)<560)e.dead=true;boss4.shot=2.2;game.checkpoint=Math.max(game.checkpoint,25710);setMessage('STADSKÄRNAN BLINKAR FÖRE VARJE SALVA',2.6);}
+    boss4.t+=dt;const phase=Math.floor(boss4.t/3.5)%2===1;boss4.x=26610+Math.sin(boss4.t*.58)*110;boss4.y=groundY-boss4.h-16+Math.sin(boss4.t*1.25)*15;boss4.shot-=dt;
+    if(boss4.shot<=0){boss4.shot=1.26;for(let a=-1;a<=1;a++){const ang=Math.atan2(player.y-boss4.y,player.x-boss4.x)+a*.24;bullets.push({x:boss4.x+46,y:boss4.y+42,vx:Math.cos(ang)*225,vy:Math.sin(ang)*225,r:5.2,life:5});}beep(120,.06,'square',.012,80);}
     const vulnerable=!abilities.realm||game.realm===phase;
     for(const sh of shots){if(!sh.dead&&hit({x:sh.x-(sh.size||5),y:sh.y-3,w:(sh.size||5)*2,h:6},boss4)){sh.dead=true;if(vulnerable){boss4.hp-=sh.damage||1;game.shake=7;beep(125,.05,'square',.02,180);}else beep(820,.04,'triangle',.012,-180);if(boss4.hp<=0){boss4.dead=true;game.boss4Dead=true;save();chord();setMessage('STADEN SLÄCKER SITT FÖRSVAR',4);}}}
     if(hit(player,boss4)){if(player.dashT>0&&vulnerable){boss4.hp--;player.vx*=-.5;game.shake=10;if(boss4.hp<=0){boss4.dead=true;game.boss4Dead=true;save();chord();}}else damage(boss4.x);}
   }
   if(!boss4.dead && player.x>26920){player.x=26920;player.vx=Math.min(0,player.vx);if(game.messageT<.25)setMessage('STADSKÄRNAN LÅSER UTGÅNGEN',1.5);}
-  if(boss4.dead && player.x>26950 && !game.world5Entered){game.world5Entered=true;game.checkpoint=Math.max(game.checkpoint,27100);save();setMessage('VÄRLD 5 — DEN KOSMISKA TRÄDGÅRDEN',4.2);game.flash=1;chord();}
+  if(boss4.dead && player.x>26950 && !game.world5Entered){game.world5Entered=true;game.checkpoint=Math.max(game.checkpoint,27100);for(const e of enemies)if(Math.abs(e.home-gardenSeed.x)<620)e.dead=true;save();setMessage('VÄRLD 5 — DEN KOSMISKA TRÄDGÅRDEN',4.2);game.flash=1;chord();}
 
   // Final boss — combines shifting, projectiles and movement. Resonance makes the arena breathe.
   if(!boss5.dead && player.x>32350){
-    boss5.t+=dt;boss5.phase=Math.floor(boss5.t/2.3)%2===1;boss5.x=33100+Math.sin(boss5.t*.52)*150;boss5.y=groundY-boss5.h-40+Math.sin(boss5.t*1.35)*42;boss5.shot-=dt;
-    if(boss5.shot<=0){boss5.shot=.52;for(let a=-2;a<=2;a++){const base=Math.atan2(player.y-boss5.y,player.x-boss5.x);const ang=base+a*.18+Math.sin(boss5.t)*.08;bullets.push({x:boss5.x+54,y:boss5.y+50,vx:Math.cos(ang)*285,vy:Math.sin(ang)*285,r:5+(Math.abs(a)===2),life:5});}beep(82,.075,'sawtooth',.016,120);}
+    if(!boss5.intro){boss5.intro=true;player.hp=player.maxHp;bullets.length=0;for(const e of enemies)if(Math.abs(e.home-33100)<620)e.dead=true;boss5.shot=2.4;game.checkpoint=Math.max(game.checkpoint,32240);setMessage('SISTA VAKTEN BLANDAR ALLT — MEN INGET KOMMER UTAN VARNING',3);}
+    boss5.t+=dt;boss5.phase=Math.floor(boss5.t/3.25)%2===1;boss5.x=33100+Math.sin(boss5.t*.48)*135;boss5.y=groundY-boss5.h-40+Math.sin(boss5.t*1.2)*36;boss5.shot-=dt;
+    if(boss5.shot<=0){boss5.shot=1.16;for(let a=-1;a<=1;a++){const base=Math.atan2(player.y-boss5.y,player.x-boss5.x);const ang=base+a*.23+Math.sin(boss5.t)*.05;bullets.push({x:boss5.x+54,y:boss5.y+50,vx:Math.cos(ang)*235,vy:Math.sin(ang)*235,r:5.5,life:5});}beep(82,.075,'sawtooth',.016,120);}
     const vulnerable=!abilities.realm||game.realm===boss5.phase;
     for(const sh of shots){if(!sh.dead&&hit({x:sh.x-(sh.size||5),y:sh.y-3,w:(sh.size||5)*2,h:6},boss5)){sh.dead=true;if(vulnerable){boss5.hp-=sh.damage||1;game.shake=8;beep(105,.055,'square',.025,190);}else beep(900,.035,'triangle',.012,-220);if(boss5.hp<=0){boss5.dead=true;game.boss5Dead=true;save();chord();setMessage('LINJEN HAR BLIVIT EN VÄRLD',5);}}}
     if(hit(player,boss5)){if(player.dashT>0&&vulnerable){boss5.hp-=abilities.resonance?2:1;player.vx*=-.5;game.shake=12;if(boss5.hp<=0){boss5.dead=true;game.boss5Dead=true;save();chord();}}else damage(boss5.x);}
@@ -704,6 +793,11 @@ function drawExtendedScenery(p){
   }
 }
 
+function drawBossTell(b,color){
+  if(b.dead||b.shot<=0||b.shot>.44)return;
+  const t=1-b.shot/.44;ctx.save();ctx.globalAlpha=.28+.55*t;ctx.strokeStyle=color;ctx.lineWidth=2+2*t;ctx.setLineDash([8,7]);ctx.beginPath();ctx.moveTo(b.x+b.w/2,b.y+b.h/2);ctx.lineTo(player.x+player.w/2,player.y+player.h/2);ctx.stroke();ctx.setLineDash([]);ctx.beginPath();ctx.arc(b.x+b.w/2,b.y+b.h/2,18+24*t,0,Math.PI*2);ctx.stroke();ctx.restore();
+}
+
 function drawWorld(p){
   const gy=H()*.72, offY=gy-groundY;
   ctx.save();ctx.translate(-game.cameraX,offY);
@@ -744,6 +838,15 @@ function drawWorld(p){
   // anchors
   for(const a of anchors){ctx.save();ctx.shadowColor=p.accent2;ctx.shadowBlur=10;ctx.strokeStyle=p.accent2;ctx.lineWidth=2.5;ctx.beginPath();ctx.arc(a.x,a.y,9+Math.sin(game.time*3+a.x)*2,0,Math.PI*2);ctx.stroke();ctx.fillStyle=p.accent2;ctx.beginPath();ctx.arc(a.x,a.y,2.8,0,Math.PI*2);ctx.fill();ctx.restore();}
 
+  // ability gates are drawn as parts of their worlds, not abstract UI locks
+  if(!game.threadLatch){ctx.save();ctx.strokeStyle=p.accent2;ctx.lineWidth=4;ctx.globalAlpha=.8;for(let y=260;y<groundY;y+=22){ctx.beginPath();ctx.moveTo(threadLatch.gateX-8,y);ctx.lineTo(threadLatch.gateX+8,y+12);ctx.stroke();}ctx.restore();}
+  if(!game.pulseGate){ctx.save();ctx.fillStyle='rgba(255,255,255,.12)';ctx.fillRect(pulseGate.x,pulseGate.y,pulseGate.w,pulseGate.h);ctx.strokeStyle=p.accent;ctx.lineWidth=3;ctx.strokeRect(pulseGate.x,pulseGate.y,pulseGate.w,pulseGate.h);ctx.beginPath();ctx.moveTo(pulseGate.x+3,pulseGate.y+20);ctx.lineTo(pulseGate.x+18,pulseGate.y+45);ctx.lineTo(pulseGate.x+6,pulseGate.y+72);ctx.lineTo(pulseGate.x+20,pulseGate.y+105);ctx.stroke();ctx.restore();}
+  for(const g of shiftGates){const open=game.realm===g.state;ctx.save();ctx.globalAlpha=open?.14:.7;ctx.fillStyle=g.state?'rgba(0,245,212,.22)':'rgba(155,93,229,.25)';ctx.fillRect(g.x,225,18,groundY-225);ctx.strokeStyle=g.state?p.accent2:p.accent;ctx.lineWidth=open?1.5:3;ctx.setLineDash(open?[6,9]:[]);ctx.strokeRect(g.x,225,18,groundY-225);ctx.setLineDash([]);ctx.fillStyle=p.text;ctx.font='800 9px system-ui';ctx.textAlign='center';ctx.globalAlpha=.75;ctx.fillText(g.label,g.x+9,212);ctx.restore();}
+  if(!game.cityPuzzleDone){const demo=Math.floor((game.time*1.45)%4),demoId=demo<3?cityOrder[demo]:-1;for(const lamp of cityLamps){const on=lamp.id===demoId;ctx.save();ctx.shadowColor=p.accent2;ctx.shadowBlur=on?24:5;ctx.fillStyle=on?p.accent2:'rgba(255,255,255,.28)';ctx.beginPath();ctx.arc(lamp.x,lamp.y,10+(on?2:0),0,Math.PI*2);ctx.fill();ctx.strokeStyle='rgba(255,255,255,.5)';ctx.beginPath();ctx.moveTo(lamp.x,lamp.y-10);ctx.lineTo(lamp.x,lamp.y-45);ctx.stroke();ctx.restore();}ctx.save();ctx.globalAlpha=.5;ctx.fillStyle=p.accent2;ctx.fillRect(22255,260,18,groundY-260);ctx.restore();}
+  if(!game.lensSeal){ctx.save();ctx.globalAlpha=.58;const lg=ctx.createLinearGradient(lensSeal.x,lensSeal.y,lensSeal.x+lensSeal.w,lensSeal.y);lg.addColorStop(0,'rgba(255,255,255,.08)');lg.addColorStop(.5,'rgba(160,245,255,.45)');lg.addColorStop(1,'rgba(255,255,255,.08)');ctx.fillStyle=lg;ctx.fillRect(lensSeal.x,lensSeal.y,lensSeal.w,lensSeal.h);ctx.strokeStyle=p.accent2;ctx.strokeRect(lensSeal.x,lensSeal.y,lensSeal.w,lensSeal.h);ctx.restore();}
+  if(!game.gardenBloom){ctx.save();ctx.translate(gardenSeed.x,gardenSeed.y);ctx.strokeStyle=p.accent2;ctx.lineWidth=2;ctx.beginPath();ctx.moveTo(0,0);ctx.quadraticCurveTo(-5,-24,0,-44);ctx.stroke();ctx.fillStyle=p.accent;ctx.beginPath();ctx.ellipse(-7,-44,8,4,-.45,0,Math.PI*2);ctx.ellipse(7,-44,8,4,.45,0,Math.PI*2);ctx.fill();ctx.globalAlpha=.28;ctx.fillRect(190,-210,16,210);ctx.restore();}else{ctx.save();ctx.strokeStyle=p.accent2;ctx.globalAlpha=.65;for(let x=27420;x<27720;x+=28){const h=20+((x*7)%45);ctx.beginPath();ctx.moveTo(x,groundY);ctx.quadraticCurveTo(x-8,groundY-h*.55,x,groundY-h);ctx.stroke();}ctx.restore();}
+  if(!game.coreGate){ctx.save();ctx.globalAlpha=.58;ctx.strokeStyle=p.accent;ctx.lineWidth=4;for(let y=coreGate.y;y<groundY;y+=18){ctx.beginPath();ctx.moveTo(coreGate.x-10,y);ctx.quadraticCurveTo(coreGate.x+15,y+9,coreGate.x-10,y+18);ctx.stroke();}ctx.globalAlpha=.18;ctx.fillStyle=p.accent2;ctx.fillRect(coreGate.x-10,coreGate.y,30,coreGate.h);ctx.restore();}
+
   // signs
   ctx.font='600 14px system-ui';ctx.textAlign='center';
   for(const s of signs){ if(Math.abs(s.x-player.x)<500){ctx.globalAlpha=.9;ctx.lineWidth=4;ctx.strokeStyle=game.world<2?'rgba(255,255,255,.8)':'rgba(0,0,0,.45)';ctx.strokeText(s.text,s.x,groundY-105);ctx.fillStyle=p.text;ctx.fillText(s.text,s.x,groundY-105);ctx.globalAlpha=1;} }
@@ -751,12 +854,35 @@ function drawWorld(p){
   // pickups
   for(const q of pickups){if(q.taken)continue;ctx.save();ctx.translate(q.x,q.y);ctx.shadowColor=p.accent2;ctx.shadowBlur=16;ctx.rotate(game.time*.7);ctx.strokeStyle=p.accent;ctx.lineWidth=3;ctx.strokeRect(-13,-13,26,26);ctx.rotate(-game.time*1.4);ctx.strokeStyle=p.accent2;ctx.strokeRect(-8,-8,16,16);ctx.restore();ctx.fillStyle=p.text;ctx.font='800 11px system-ui';ctx.textAlign='center';ctx.fillText(q.label,q.x,q.y-27);}
 
-  // enemies
-  for(const e of enemies){if(e.dead)continue;ctx.save();ctx.translate(e.x,e.y);ctx.fillStyle=e.type==='brute'?p.accent:p.accent2;
-    if(e.type==='flyer'||e.type==='wisp'){ctx.beginPath();ctx.moveTo(0,12);ctx.quadraticCurveTo(13,-5,26,12);ctx.quadraticCurveTo(13,29,0,12);ctx.fill();if(e.type==='wisp'){ctx.globalAlpha=.25;ctx.beginPath();ctx.arc(13,12,20+Math.sin(game.time*4+e.x)*3,0,Math.PI*2);ctx.fill();ctx.globalAlpha=1;}}
-    else if(e.type==='sentinel'){ctx.strokeStyle=p.accent;ctx.lineWidth=3;ctx.beginPath();ctx.arc(13,13,12,0,Math.PI*2);ctx.stroke();ctx.beginPath();ctx.arc(13,13,4+Math.sin(game.time*5+e.x)*2,0,Math.PI*2);ctx.fill();}
-    else{ctx.fillRect(0,0,e.w,e.h);ctx.fillStyle=p.bg;ctx.fillRect(e.w*.62,7,4,4);if(e.type==='brute'){ctx.strokeStyle=p.accent2;ctx.lineWidth=2;ctx.strokeRect(-3,-3,e.w+6,e.h+6);}}
-    ctx.restore();}
+  // enemies — the same gameplay families take the material and silhouette of their world.
+  for(const e of enemies){
+    if(e.dead)continue;
+    const zone=e.home<7900?1:e.home<15850?2:e.home<21400?3:e.home<27000?4:5;
+    ctx.save();ctx.translate(e.x,e.y);
+    if(zone===1){
+      ctx.fillStyle=e.type==='brute'?p.accent:p.accent2;
+      if(e.type==='flyer'||e.type==='wisp'){ctx.beginPath();ctx.moveTo(0,12);ctx.quadraticCurveTo(13,-5,26,12);ctx.quadraticCurveTo(13,29,0,12);ctx.fill();}
+      else if(e.type==='sentinel'){ctx.strokeStyle=p.accent;ctx.lineWidth=3;ctx.beginPath();ctx.arc(13,13,12,0,Math.PI*2);ctx.stroke();ctx.beginPath();ctx.arc(13,13,4,0,Math.PI*2);ctx.fill();}
+      else{ctx.fillRect(0,0,e.w,e.h);ctx.fillStyle=p.bg;ctx.fillRect(e.w*.62,7,4,4);if(e.type==='brute'){ctx.strokeStyle=p.accent2;ctx.lineWidth=2;ctx.strokeRect(-3,-3,e.w+6,e.h+6);}}
+    }else if(zone===2){
+      if(e.type==='wisp'||e.type==='flyer'){ctx.shadowColor='#e9f3a5';ctx.shadowBlur=12;ctx.fillStyle=e.type==='wisp'?'#d9ec86':p.accent2;ctx.beginPath();ctx.ellipse(13,12,9,6,Math.sin(game.time+e.x)*.25,0,Math.PI*2);ctx.fill();ctx.globalAlpha=.45;ctx.strokeStyle=ctx.fillStyle;ctx.beginPath();ctx.arc(13,12,18+Math.sin(game.time*4+e.x)*3,0,Math.PI*2);ctx.stroke();}
+      else if(e.type==='sentinel'){ctx.strokeStyle='#547b5b';ctx.lineWidth=4;ctx.beginPath();ctx.moveTo(13,30);ctx.quadraticCurveTo(-8,12,13,-8);ctx.quadraticCurveTo(35,12,13,30);ctx.stroke();ctx.fillStyle='#f0bd67';ctx.beginPath();ctx.arc(13,8,5,0,Math.PI*2);ctx.fill();}
+      else{ctx.fillStyle=e.type==='brute'?'#5f6552':'#375c43';ctx.beginPath();ctx.ellipse(13,17,e.type==='brute'?17:13,e.type==='brute'?15:10,0,0,Math.PI*2);ctx.fill();ctx.strokeStyle='#b7c99c';ctx.lineWidth=2;for(let i=0;i<3;i++){ctx.beginPath();ctx.moveTo(5+i*7,23);ctx.lineTo(1+i*8,31);ctx.stroke();}ctx.fillStyle='#f3c96b';ctx.beginPath();ctx.arc(19,13,2.5,0,Math.PI*2);ctx.fill();}
+    }else if(zone===3){
+      if(e.type==='wisp'||e.type==='flyer'){ctx.strokeStyle='#d9f5ff';ctx.lineWidth=3;ctx.globalAlpha=.8;ctx.beginPath();ctx.moveTo(0,17);ctx.bezierCurveTo(8,-5,20,30,28,7);ctx.stroke();ctx.beginPath();ctx.moveTo(5,5);ctx.bezierCurveTo(14,25,22,-5,29,18);ctx.stroke();}
+      else if(e.type==='sentinel'){ctx.strokeStyle='#9be7ff';ctx.lineWidth=3;ctx.beginPath();ctx.moveTo(13,-7);ctx.lineTo(5,10);ctx.lineTo(15,10);ctx.lineTo(7,28);ctx.lineTo(24,7);ctx.lineTo(14,7);ctx.closePath();ctx.stroke();}
+      else{ctx.fillStyle=e.type==='brute'?'#3c4a50':'#59686d';ctx.beginPath();ctx.moveTo(2,26);ctx.lineTo(5,7);ctx.lineTo(17,0);ctx.lineTo(26,10);ctx.lineTo(23,28);ctx.closePath();ctx.fill();ctx.strokeStyle='rgba(220,245,255,.45)';ctx.stroke();}
+    }else if(zone===4){
+      if(e.type==='wisp'||e.type==='flyer'){ctx.fillStyle='#18252a';ctx.fillRect(3,7,22,12);ctx.strokeStyle=p.accent2;ctx.strokeRect(3,7,22,12);ctx.fillStyle=p.accent;ctx.fillRect(10,11,8,3);ctx.strokeStyle='rgba(255,255,255,.45)';ctx.beginPath();ctx.moveTo(0,4);ctx.lineTo(6,10);ctx.moveTo(28,4);ctx.lineTo(22,10);ctx.stroke();}
+      else if(e.type==='sentinel'){ctx.strokeStyle=p.accent2;ctx.lineWidth=3;ctx.strokeRect(1,1,24,24);ctx.fillStyle=p.accent;ctx.beginPath();ctx.arc(13,13,6,0,Math.PI*2);ctx.fill();ctx.fillStyle='#10181c';ctx.beginPath();ctx.arc(13,13,2,0,Math.PI*2);ctx.fill();}
+      else{ctx.fillStyle=e.type==='brute'?'#26373d':'#31454b';ctx.fillRect(0,0,e.w,e.h);ctx.strokeStyle=e.type==='brute'?p.accent:p.accent2;ctx.lineWidth=2;ctx.strokeRect(-2,-2,e.w+4,e.h+4);ctx.fillStyle=p.accent2;ctx.fillRect(e.w-8,6,4,7);ctx.globalAlpha=.25;ctx.fillRect(4,e.h-7,e.w-8,3);}
+    }else{
+      if(e.type==='wisp'||e.type==='flyer'){ctx.shadowColor=p.accent2;ctx.shadowBlur=14;ctx.strokeStyle=p.accent2;ctx.lineWidth=2;ctx.beginPath();ctx.ellipse(13,12,13,5,game.time*.3,0,Math.PI*2);ctx.stroke();ctx.beginPath();ctx.ellipse(13,12,5,13,-game.time*.25,0,Math.PI*2);ctx.stroke();ctx.fillStyle='#fff';ctx.beginPath();ctx.arc(13,12,3,0,Math.PI*2);ctx.fill();}
+      else if(e.type==='sentinel'){ctx.fillStyle=p.accent;ctx.beginPath();ctx.moveTo(13,-3);ctx.lineTo(25,12);ctx.lineTo(13,28);ctx.lineTo(1,12);ctx.closePath();ctx.fill();ctx.globalAlpha=.35;ctx.strokeStyle='#fff';ctx.beginPath();ctx.arc(13,12,18,0,Math.PI*2);ctx.stroke();}
+      else{ctx.fillStyle=e.type==='brute'?p.accent:p.accent2;ctx.beginPath();ctx.moveTo(13,-4);ctx.lineTo(26,11);ctx.lineTo(20,30);ctx.lineTo(5,28);ctx.lineTo(0,10);ctx.closePath();ctx.fill();ctx.globalAlpha=.4;ctx.strokeStyle='#fff';ctx.stroke();}
+    }
+    ctx.restore();
+  }
 
   // phase portal + minnesskärva
   if(abilities.phase && !abilities.echo){
@@ -794,9 +920,10 @@ function drawWorld(p){
   if(!boss.dead && player.x>6900){ctx.save();ctx.translate(boss.x,boss.y);ctx.rotate(Math.sin(game.time*2)*.08);ctx.fillStyle=p.accent;ctx.fillRect(0,0,boss.w,boss.h);ctx.fillStyle=p.bg;ctx.fillRect(11,14,10,10);ctx.fillRect(41,14,10,10);ctx.strokeStyle=p.accent2;ctx.lineWidth=4;ctx.strokeRect(-6,-6,boss.w+12,boss.h+12);ctx.restore();}
   if(!boss2.dead && player.x>14500){ctx.save();ctx.translate(boss2.x+boss2.w/2,boss2.y+boss2.h/2);ctx.rotate(game.time*.28);const vulnerable=!abilities.realm||game.realm===boss2.phase;ctx.globalAlpha=vulnerable?1:.38;ctx.strokeStyle=boss2.phase?p.accent2:p.accent;ctx.lineWidth=6;ctx.beginPath();ctx.arc(0,0,38,0,Math.PI*2);ctx.stroke();ctx.rotate(-game.time*.7);ctx.strokeRect(-24,-24,48,48);ctx.rotate(game.time*1.1);ctx.strokeRect(-14,-14,28,28);ctx.fillStyle=p.line;ctx.beginPath();ctx.arc(0,0,8+Math.sin(game.time*5)*2,0,Math.PI*2);ctx.fill();ctx.globalAlpha=1;ctx.restore();}
   if(!boss3.dead && player.x>20000){ctx.save();ctx.translate(boss3.x+boss3.w/2,boss3.y+boss3.h/2);ctx.shadowColor=p.accent2;ctx.shadowBlur=18;ctx.strokeStyle=p.accent2;ctx.lineWidth=5;for(let i=0;i<3;i++){ctx.rotate(game.time*(.22+i*.06)*(i%2?1:-1));ctx.beginPath();ctx.arc(0,0,18+i*12,i*.7,Math.PI*1.45+i*.7);ctx.stroke();}ctx.fillStyle=p.accent;ctx.beginPath();ctx.arc(0,0,11+Math.sin(game.time*6)*2,0,Math.PI*2);ctx.fill();ctx.restore();}
-  if(!boss4.dead && player.x>25600){ctx.save();ctx.translate(boss4.x+boss4.w/2,boss4.y+boss4.h/2);const ph=Math.floor(boss4.t/2.6)%2===1;ctx.shadowColor=ph?p.accent2:p.accent;ctx.shadowBlur=16;ctx.strokeStyle=ph?p.accent2:p.accent;ctx.lineWidth=5;ctx.strokeRect(-36,-36,72,72);ctx.rotate(game.time*.4);ctx.strokeRect(-24,-24,48,48);ctx.fillStyle=p.line;ctx.fillRect(-9,-9,18,18);ctx.restore();}
+  if(!boss4.dead && player.x>25600){ctx.save();ctx.translate(boss4.x+boss4.w/2,boss4.y+boss4.h/2);const ph=Math.floor(boss4.t/3.5)%2===1;ctx.shadowColor=ph?p.accent2:p.accent;ctx.shadowBlur=16;ctx.strokeStyle=ph?p.accent2:p.accent;ctx.lineWidth=5;ctx.strokeRect(-36,-36,72,72);ctx.rotate(game.time*.4);ctx.strokeRect(-24,-24,48,48);ctx.fillStyle=p.line;ctx.fillRect(-9,-9,18,18);ctx.restore();}
   if(!boss5.dead && player.x>32100){ctx.save();ctx.translate(boss5.x+boss5.w/2,boss5.y+boss5.h/2);ctx.shadowColor=boss5.phase?p.accent2:p.accent;ctx.shadowBlur=24;ctx.strokeStyle=boss5.phase?p.accent2:p.accent;ctx.lineWidth=6;for(let i=0;i<4;i++){ctx.rotate((i%2?1:-1)*game.time*(.12+i*.05));ctx.beginPath();ctx.ellipse(0,0,20+i*11,36+i*6,0,0,Math.PI*2);ctx.stroke();}ctx.fillStyle='#fff';ctx.beginPath();ctx.arc(0,0,10+Math.sin(game.time*5)*3,0,Math.PI*2);ctx.fill();ctx.restore();}
-  for(const b of bullets){ctx.fillStyle=p.accent2;ctx.beginPath();ctx.arc(b.x,b.y,b.r,0,Math.PI*2);ctx.fill();}
+  drawBossTell(boss,p.accent);drawBossTell(boss2,p.accent2);drawBossTell(boss3,p.accent2);drawBossTell(boss4,p.accent);drawBossTell(boss5,p.accent2);
+  for(const b of bullets){ctx.save();ctx.shadowColor='#ffffff';ctx.shadowBlur=8;ctx.fillStyle=p.accent2;ctx.beginPath();ctx.arc(b.x,b.y,b.r+1.5,0,Math.PI*2);ctx.fill();ctx.shadowBlur=0;ctx.strokeStyle='rgba(0,0,0,.65)';ctx.lineWidth=1.5;ctx.stroke();ctx.restore();}
 
   // grapple line
   if(player.grapple){ctx.strokeStyle=p.accent2;ctx.lineWidth=2;ctx.beginPath();ctx.moveTo(player.x+12,player.y+10);ctx.lineTo(player.grapple.x,player.grapple.y);ctx.stroke();}
@@ -817,6 +944,22 @@ function drawWorld(p){
   ctx.restore();
 }
 
+function drawDepthMode(p){
+  const w=W(),h=H(),vpX=w*.5,vpY=h*.18;
+  const sky=ctx.createLinearGradient(0,0,0,h);sky.addColorStop(0,'#28394a');sky.addColorStop(.48,'#667b86');sky.addColorStop(1,'#171e24');ctx.fillStyle=sky;ctx.fillRect(0,0,w,h);
+  for(let layer=0;layer<4;layer++){ctx.fillStyle=`rgba(16,28,34,${.12+layer*.07})`;ctx.beginPath();ctx.moveTo(0,h*.62);for(let x=0;x<=w+80;x+=80){const y=h*(.42+layer*.025)-Math.sin(x*.015+layer)*35-layer*10;ctx.lineTo(x,y);}ctx.lineTo(w,h*.7);ctx.closePath();ctx.fill();}
+  ctx.globalAlpha=.13;ctx.strokeStyle='#dff8ff';for(let i=0;i<42;i++){const x=(i*91+game.time*210)%(w+100)-50,y=(i*47+game.time*330)%(h+100)-50;ctx.beginPath();ctx.moveTo(x,y);ctx.lineTo(x-12,y+30);ctx.stroke();}ctx.globalAlpha=1;
+  const fold=clamp(game.foldT/FOLD_TIME,0,1);
+  if(fold<1){const hingeY=h*.72,farY=lerp(hingeY,vpY,fold),inset=lerp(0,w*.24,fold);ctx.fillStyle='rgba(15,23,28,.64)';ctx.beginPath();ctx.moveTo(inset,hingeY);ctx.lineTo(w-inset,hingeY);ctx.lineTo(vpX+lerp(w*.5,30,fold),farY);ctx.lineTo(vpX-lerp(w*.5,30,fold),farY);ctx.closePath();ctx.fill();ctx.strokeStyle='#f4fbff';ctx.lineWidth=4;ctx.beginPath();ctx.moveTo(0,hingeY);ctx.lineTo(vpX,hingeY);ctx.lineTo(lerp(w,vpX,fold),farY);ctx.stroke();ctx.fillStyle='#fff';ctx.textAlign='center';ctx.font='900 24px system-ui';ctx.globalAlpha=.55+.45*fold;ctx.fillText('FRAMÅT VIKER SIG',w/2,h*.34);ctx.font='700 13px system-ui';ctx.fillText('höger → inåt',w/2,h*.39);ctx.globalAlpha=1;ctx.fillStyle='#f5fbff';ctx.fillRect(w*.5-8,hingeY-28,16,22);ctx.beginPath();ctx.arc(w*.5,hingeY-32,7,0,Math.PI*2);ctx.fill();return;}
+  ctx.fillStyle='rgba(14,24,29,.78)';ctx.beginPath();ctx.moveTo(w*.07,h);ctx.lineTo(w*.93,h);ctx.lineTo(vpX+20,vpY+10);ctx.lineTo(vpX-20,vpY+10);ctx.closePath();ctx.fill();ctx.strokeStyle='rgba(226,247,250,.26)';ctx.lineWidth=1;
+  for(const lane of [-.66,-.33,0,.33,.66]){ctx.beginPath();ctx.moveTo(vpX+lane*10,vpY+10);ctx.lineTo(vpX+lane*w*.47,h);ctx.stroke();}
+  for(let i=1;i<=10;i++){const t=i/10,e=t*t,y=lerp(vpY+10,h,e),half=lerp(22,w*.43,e);ctx.globalAlpha=.08+.18*t;ctx.beginPath();ctx.moveTo(vpX-half,y);ctx.lineTo(vpX+half,y);ctx.stroke();}ctx.globalAlpha=1;
+  ctx.strokeStyle='#f5fbff';ctx.lineWidth=3.5;ctx.beginPath();ctx.moveTo(vpX,vpY+8);ctx.lineTo(vpX,h);ctx.stroke();
+  for(const o of depthObstacles){const dz=o.z-game.depthProgress;if(dz<=-.025||dz>.46)continue;const t=clamp(1-dz/.46,0,1),e=t*t,y=lerp(vpY+18,h*.91,e),x=vpX+o.lane*lerp(12,w*.36,e),sc=.18+1.55*e;ctx.save();ctx.translate(x,y);ctx.scale(sc,sc);if(o.type==='rock'){ctx.fillStyle='#334047';ctx.strokeStyle='rgba(230,245,248,.55)';ctx.lineWidth=1.4;ctx.beginPath();ctx.moveTo(-18,8);ctx.lineTo(-12,-12);ctx.lineTo(2,-21);ctx.lineTo(18,-7);ctx.lineTo(15,10);ctx.closePath();ctx.fill();ctx.stroke();}else if(o.type==='gust'||o.type==='gustwall'){ctx.strokeStyle='#c9f4ff';ctx.lineWidth=3;ctx.globalAlpha=.72;if(o.type==='gustwall'){ctx.scale(5.2,1);for(let k=-2;k<=2;k++){ctx.beginPath();ctx.moveTo(-24,-12+k*7);ctx.bezierCurveTo(-5,-25+k*6,9,12+k*5,28,-8+k*7);ctx.stroke();}}else{for(let k=-1;k<=1;k++){ctx.beginPath();ctx.moveTo(-24,-8+k*9);ctx.bezierCurveTo(-5,-22+k*7,9,10+k*5,28,-6+k*9);ctx.stroke();}}}else{ctx.strokeStyle='#effcff';ctx.shadowColor='#b8f1ff';ctx.shadowBlur=12;ctx.lineWidth=4;ctx.beginPath();ctx.moveTo(0,-28);ctx.lineTo(-8,-7);ctx.lineTo(4,-7);ctx.lineTo(-5,22);ctx.lineTo(17,-5);ctx.lineTo(5,-5);ctx.closePath();ctx.stroke();}ctx.restore();}
+  const px=vpX+game.depthLane*w*.34,py=h*.82-game.depthJump*72;ctx.save();ctx.translate(px,py);ctx.shadowColor='#dff8ff';ctx.shadowBlur=10;ctx.fillStyle='#f4fbff';ctx.fillRect(-8,-20,16,22);ctx.beginPath();ctx.arc(0,-25,7,0,Math.PI*2);ctx.fill();ctx.strokeStyle=p.accent2;ctx.lineWidth=3;ctx.beginPath();ctx.moveTo(-4,2);ctx.lineTo(-8,10);ctx.moveTo(4,2);ctx.lineTo(8,10);ctx.stroke();ctx.restore();
+  ctx.fillStyle='rgba(4,8,12,.55)';ctx.fillRect(w*.25,h-38,w*.5,8);ctx.fillStyle=p.accent2;ctx.fillRect(w*.25,h-38,w*.5*clamp(game.depthProgress,0,1),8);ctx.strokeStyle='rgba(255,255,255,.55)';ctx.strokeRect(w*.25,h-38,w*.5,8);ctx.fillStyle='#fff';ctx.textAlign='center';ctx.font='700 11px system-ui';ctx.globalAlpha=.72;ctx.fillText('VÄNSTER / HÖGER • JUMP över hinder • håll JUMP i vind',w/2,h-54);ctx.globalAlpha=1;
+}
+
 function drawHUD(p){
   ctx.save();
   ctx.fillStyle='rgba(6,9,14,.74)';ctx.fillRect(16,16,220,58);
@@ -824,10 +967,10 @@ function drawHUD(p){
   for(let i=0;i<player.maxHp;i++){ctx.globalAlpha=i<player.hp?1:.2;ctx.fillStyle=p.accent;ctx.fillRect(28+i*22,49,14,7);}ctx.globalAlpha=1;
   ctx.font='600 11px system-ui';ctx.fillStyle='#ffffff';ctx.globalAlpha=.65;ctx.fillText('R återställ  •  M ljud',126,59);ctx.globalAlpha=1;
 
-  const abs=[['F:SKOTT',abilities.color],['2X',abilities.double],['TRÅD',abilities.grapple],['PULS',abilities.dash],['SE',abilities.phase],['EKO',abilities.echo],['E:SKIFT',abilities.realm],['VIND',abilities.glide],['LINS',abilities.focus],['KÄRNA',abilities.resonance]];
-  let x=W()-18;
-  ctx.textAlign='right';ctx.font='700 11px system-ui';
-  for(let i=abs.length-1;i>=0;i--){const [name,on]=abs[i];ctx.globalAlpha=on?1:.16;ctx.fillStyle='#ffffff';ctx.fillText(name,x,34);x-=ctx.measureText(name).width+16;}ctx.globalAlpha=1;
+  // Only active controls stay in the HUD. Passive upgrades are taught when collected instead of cluttering the screen.
+  const abs=[['SHOT',abilities.color],['HOOK',abilities.grapple],['DASH',abilities.dash],['SHIFT',abilities.realm],['HÅLL JUMP: VIND',abilities.glide]].filter(a=>a[1]);
+  let x=W()-18;ctx.textAlign='right';ctx.font=`700 ${W()<760?9:11}px system-ui`;
+  for(let i=abs.length-1;i>=0;i--){const name=abs[i][0],tw=ctx.measureText(name).width+14;if(x-tw<250)break;ctx.globalAlpha=.86;ctx.fillStyle='#ffffff';ctx.fillText(name,x,34);x-=tw;}ctx.globalAlpha=1;
 
   if(!boss.dead && player.x>7050 && player.x<8050){ctx.fillStyle='rgba(0,0,0,.25)';ctx.fillRect(W()/2-150,22,300,16);ctx.fillStyle=p.accent;ctx.fillRect(W()/2-146,26,292*(boss.hp/boss.maxHp),8);ctx.strokeStyle=p.line;ctx.strokeRect(W()/2-150,22,300,16);}
   if(!boss2.dead && player.x>14600){ctx.fillStyle='rgba(0,0,0,.28)';ctx.fillRect(W()/2-170,22,340,18);ctx.fillStyle=boss2.phase?p.accent2:p.accent;ctx.fillRect(W()/2-166,27,332*(boss2.hp/boss2.maxHp),8);ctx.strokeStyle=p.line;ctx.strokeRect(W()/2-170,22,340,18);}
@@ -862,7 +1005,9 @@ function drawEnd(){
 function render(){
   if(game.screen==='title'){drawTitle();return;}
   if(game.screen==='end'){drawEnd();return;}
-  const p=palette(game.world);drawBackground(p);
+  const p=palette(game.world);
+  if(game.depthActive){drawDepthMode(p);drawHUD(p);if(game.flash>0){ctx.globalAlpha=game.flash*.45;ctx.fillStyle='#fff';ctx.fillRect(0,0,W(),H());ctx.globalAlpha=1;}return;}
+  drawBackground(p);
   ctx.save(); if(game.shake>0)ctx.translate(rand(-game.shake,game.shake),rand(-game.shake,game.shake)); drawWorld(p);ctx.restore(); drawHUD(p);
   if(game.flash>0){ctx.globalAlpha=game.flash*.45;ctx.fillStyle='#fff';ctx.fillRect(0,0,W(),H());ctx.globalAlpha=1;}
 }

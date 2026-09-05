@@ -24,6 +24,20 @@ The player is given time to understand each new element before the next layer ar
 
 What starts as something almost completely empty slowly grows into a rich, strange, beautiful and visually intense world.
 
+## Current playable build
+
+The current build is structured as a visible evolution rather than five variations of the same level.
+
+- The opening stays deliberately minimal and teaches the first rules.
+- Later worlds gain their own materials, silhouettes, enemies, atmosphere and logic.
+- Abilities are route keys as well as movement/combat tools — progression requires understanding them.
+- The third world breaks the side-scrolling language by physically folding the path into the screen.
+- Each major world has a small idea or ritual that belongs to that place instead of repeating the same kind of obstacle.
+- Bosses telegraph dangerous attacks and restore the player before the encounter, so a skilled player can win on a first attempt while later fights still become harder.
+- Readability remains a priority as the world gains more detail, light, depth and motion.
+
+The guiding rule is simple: **each new world should feel more real, more specific and less like the world before it.**
+
 ## The idea
 
 The world of LINE//SHIFT is not meant to feel fixed.
